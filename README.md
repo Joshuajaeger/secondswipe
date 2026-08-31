@@ -14,6 +14,6 @@ ehrlich mit seiner Unsicherheit umgeht.
 Die Site ist statisch und benötigt keinen Build-Schritt. Einfach `index.html` im
 Browser öffnen oder über GitHub Pages hosten.
 
-## Pilot
+## App
 
-Der laufende Pilot liegt unter [secondswipe-pilot.fly.dev](https://secondswipe-pilot.fly.dev).
+Die offizielle App läuft unter [secondswipe-swipe.onrender.com](https://secondswipe-swipe.onrender.com).
