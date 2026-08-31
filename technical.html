@@ -162,6 +162,41 @@ pick argmax(score)</code></pre>
 </section>
 
 <section class="wrap">
+  <span class="kicker">Dwell-Time</span>
+  <h2>2b. Ambivalenz messen: die Verweildauer als Signal</h2>
+  <p>
+    Nicht nur <em>was</em> gewischt wird, ist eine Information – auch <em>wie lange</em>
+    eine Karte betrachtet wurde, bevor sie weggewischt wird. Die Dauer zwischen
+    „Karte angezeigt" und „Wisch" ist ein beobachtbares, binär-freies Verhaltenssignal.
+  </p>
+  <pre><code>// Client: misst und übermittelt die Verweildauer
+const t0 = performance.now()
+card.onSwipe(dir => api.post('/api/swipe', {
+  cardId, dir,
+  dwellMs: Math.round(performance.now() - t0)
+}))</code></pre>
+  <h3>Wie daraus ein Feature wird</h3>
+  <p>
+    Die Verweildauer wird pro Wisch als Zusatzmerkmal abgelegt. Sie dient als
+    <strong>weiche Signalkomponente</strong>, nicht als harter Label-Ersatz:
+  </p>
+  <ul style="margin:0 0 16px 20px">
+    <li style="margin-bottom:8px"><strong>Ambivalenz-Indikator:</strong> Eine lange Verweildauer bei einem Like deutet auf Zögern und Relevanz hin; eine sehr kurze Verweildauer bei einem Like eher auf Impuls. Das geht als gewichtetes Zusatzmerkmal in den Posterior ein.</li>
+    <li><strong>„Ähnliches zeigen":</strong> Liegt die Verweildauer über einem Schwellwert (z.&nbsp;B. p95 pro Sitzung), wird die Kategorie/Kandidatengruppe dieser Karte im aktuellen Stapel hochgewichtet – der Nutzer bekommt mehr Stücke, die dem zögerlich betrachteten ähneln.</li>
+  </ul>
+  <h3>Signalqualität &amp; Ehrlichkeit</h3>
+  <pre><code>dwell(w) = softplus( (dwellMs - baseline) / scale )
+score = sigmoid(w·x) · (1 + λ · similarity(dwellCard, candidate))</code></pre>
+  <p class="warn">
+    <strong>Verweildauer ist ein schwaches, lautes Signal.</strong> Sie wird durch
+    Ablenkung, Ladepausen oder „drüber nachdenken ohne Interesse" verfälscht. Deshalb
+    wirkt sie nur als <em>weiche</em> Gewichtung, nie als Ersatz für den Wisch-Label.
+    Der Faktor <code>λ</code> ist klein und gedeckelt, damit ein Zögern das Modell nicht
+    übersteuert.
+  </p>
+</section>
+
+<section class="wrap">
   <span class="kicker">Unsicherheit</span>
   <h2>3. Unsicherheit, die man ernst nimmt</h2>
   <p>
