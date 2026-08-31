@@ -3,8 +3,11 @@
 Tinder für Second-Hand-Funde – Empfehlungen mit einem Bayes'schen Modell, das
 ehrlich mit seiner Unsicherheit umgeht.
 
-- **[Pitch (nicht-technisch)](index.html)** – was SecondSwipe ist und warum.
-- **[Technische Doku](technical.html)** – Modell, Thompson Sampling, Unsicherheit, Architektur.
+- **[Pitch (öffentlich)](index.html)** – was SecondSwipe ist und warum. Das ist die einzige
+  öffentlich verlinkte Seite.
+- **[Technische Doku (Admin)](admin/technical.html)** – Modell, Thompson Sampling,
+  Unsicherheit, Architektur. Für Admins/Intern, **nicht** über die öffentliche Site verlinkt
+  (nur direkt per URL erreichbar).
 
 ## Starten
 
