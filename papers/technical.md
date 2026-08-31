@@ -12,13 +12,15 @@
 
 SecondSwipe empfiehlt Second-Hand-Artikel aus einem Strom binärer Wisch-Entscheidungen. Jede
 Nutzerin besitzt ein eigenes Modell, das ausschliesslich auf ihren eigenen, binären
-Verhaltenssignalen trainiert wird. Wir begründen hier die drei zentralen Entscheidungen: (1) eine
-**logistische Regression mit Bayes'schem Posterior** statt kollaborativem Filtern oder Deep Learning,
-(2) eine **Laplace-Approximation** als analytische Inferenzmethode, die in einer einzigen Request
-laufen kann, und (3) **Thompson Sampling** als explorationsfreier Bandit für die Kartenauswahl. Wir
-zeigen, warum diese Kombination die Anforderungen – Kaltstart-Ehrlichkeit, Interpretierbarkeit,
-Unsicherheitsquantifizierung und Privatsphäre – bei minimaler Systemkomplexität erfüllt, und benennen
-die Grenzen dieser Wahl.
+Verhaltenssignalen trainiert wird. Wir begründen hier die zentralen Entscheidungen: (1) **VLM-basierte
+Feature-Extraktion** aus Produktbildern zur automatischen Gewinnung interpretierbarer Merkmale,
+(2) eine **logistische Regression mit Bayes'schem Posterior** statt kollaborativem Filtern oder Deep
+Learning, (3) eine **Laplace-Approximation** als analytische Inferenzmethode, die in einer einzigen
+Request laufen kann, und (4) **Thompson Sampling** als explorationsfreier Bandit für die
+Kartenauswahl. Wir zeigen, warum diese Kombination die Anforderungen – Kaltstart-Ehrlichkeit,
+Interpretierbarkeit, Unsicherheitsquantifizierung und Privatsphäre – bei minimaler Systemkomplexität
+erfüllt, und wie implizite Präferenzen aus reinem Wischverhalten emergieren, die der Nutzer selbst
+nicht artikulieren könnte.
 
 ---
 
@@ -34,7 +36,7 @@ Das Empfehlungsproblem von SecondSwipe ist durch vier Eigenschaften geprägt:
 4. **Privatsphäre durch Architektur.** Ein Modell pro Nutzerin, keine Cross-User-Verknüpfung, keine
    Tracker. Das verbietet Verfahren, die von Natur aus Nutzerübergreifende Daten benötigen.
 
-Aus diesen Anforderungen folgt die Architektur unmittelbar. Wir stellen sie in Abschnitt 7 dar.
+Aus diesen Anforderungen folgt die Architektur unmittelbar. Wir stellen sie in Abschnitt 8 dar.
 
 ---
 
@@ -93,9 +95,81 @@ Exploration aus einer einzigen Konstruktion.
 
 ---
 
-## 3. Bayesianische Inferenz: Warum ein Posterior, warum Laplace?
+## 3. Feature-Extraktion und die Emergenz impliziter Präferenzen
 
-### 3.1 Warum Bayes'sch statt Maximum-Likelihood?
+Das Modell benötigt strukturierte Merkmale `x`, um aus einem Wisch lernen zu können. SecondSwipe
+gewinnt diese Merkmale nicht durch manuelle Kategorisierung oder Nutzerbefragung, sondern durch
+automatisierte Analyse der Produktbilder und -beschreibungen.
+
+### 3.1 VLM-basierte Attributextraktion
+
+Jeder Artikel im Katalog wird vor der ersten Präsentation durch ein **Vision-Language Model (VLM)**
+verarbeitet. Das VLM extrahiert aus Bild und Beschreibung eine Reihe semantischer Attribute:
+
+- **Material:** Holz, Metall, Kunststoff, Stoff, Leder, Stein, Glas, etc.
+- **Farbe:** Dominante Farbtöne und Farbtemperaturen.
+- **Stil/Ära:** Mid-Century Modern, Bauhaus, Industrial, Skandinavisch, Vintage, etc.
+- **Kategorie:** Sofa, Leuchte, Stuhl, Tisch, Regal, etc.
+- **Zustand:** Neu, sehr gut, gebraucht, restaurierungsbedürftig.
+- **Preisband:** Ordinale Einordnung des Preises.
+
+Die Extraktion basiert auf Architekturen wie **CLIP** (**Radford et al., 2021**), die visuelle und
+textuelle Repräsentationen in einem gemeinsamen Embedding-Raum abbilden. Durch Prompting oder
+fine-tuning auf Second-Hand-Domänen werden die rohen Embeddings in diskrete, interpretierbare
+Labels überführt. Diese Labels bilden den Merkmalsvektor `x` für das logistische Modell.
+
+Der Vorteil dieser Pipeline ist die **Skalierbarkeit ohne manuelle Annotation**: Jeder neue Artikel
+im Katalog erhält automatisch seine Merkmale, ohne dass ein Mensch ihn kategorisieren muss.
+
+### 3.2 Der Gewichtsvektor als Wichtigkeitsmatrix
+
+Nach dem Training enthält der Posterior über die Gewichte `w` die gesamte Information über die
+Präferenzen der Nutzerin. Der Erwartungswert `E[w]` ist dabei eine **Wichtigkeitsmatrix**:
+
+- **|w_i| (Absolutwert):** Wie wichtig ist Merkmal *i* für die Entscheidung? Ein grosses |w_i|
+  bedeutet, dass dieses Merkmal die Like-Wahrscheinlichkeit stark beeinflusst.
+- **sign(w_i) (Vorzeichen):** In welche Richtung wirkt das Merkmal? Positiv = präferenzsteigernd,
+  negativ = präferenzmindernd.
+
+Beispiel: Wenn `w_Holz = +0.8` und `w_Kunststoff = -0.6`, dann erhöht Holz die Like-Wahrscheinlichkeit
+deutlich, während Kunststoff sie senkt. Die Differenz `|w_Holz| + |w_Kunststoff|` zeigt, dass Material
+ein hochrelevantes Merkmal für diese Nutzerin ist.
+
+Diese Matrix ist **nicht vorgegeben**, sondern emergiert ausschliesslich aus dem Wischverhalten. Sie
+ist das quantitative Abbild des individuellen Geschmacks.
+
+### 3.3 Revealed Preference: Was Verhalten offenbart, was Introspektion verschweigt
+
+Die zentrale wissenschaftliche Einsicht hinter SecondSwipe ist die **Revealed-Preference-Theorie**
+(**Samuelson, 1938**): Präferenzen werden nicht durch Befragung ermittelt, sondern durch beobachtetes
+Verhalten offenbart. Ein Nutzer kann vielleicht nicht artikulieren, dass er Holz gegenüber Kunststoff
+präferiert – aber sein konsistentes Rechts-Wischen bei Holzartikeln und Links-Wischen bei
+Kunststoffartikeln enthüllt diese Präferenz mit statistischer Sicherheit.
+
+Dies steht im Kontrast zur **Stated Preference** (selbstberichtete Präferenz), die in der
+psychologischen Literatur als systematisch verzerrt gilt:
+
+- **Soziale Erwünschtheit:** Nutzer geben Antworten, die sozial akzeptabel erscheinen, nicht ihre
+  wahren Präferenzen.
+- **Mangelnde Introspektion:** Viele Präferenzen sind implizit und der bewussten Reflexion nicht
+  zugänglich (**Greenwald & Banaji, 1995**).
+- **Attitude-Behavior Gap:** Selbst wenn Nutzer ihre Präferenz korrekt berichten, korreliert sie
+  oft schwach mit tatsächlichem Verhalten (**Ajzen & Fishbein, 1977**; **Nosek et al., 2007**).
+
+SecondSwipe umgeht alle drei Verzerrungen, indem es **nur Verhalten misst**. Der Wisch ist ein
+binärer, unverfälschter Akt der Wahl. Aus hunderten solcher Akte emergiert ein Präferenzprofil, das
+genauer ist als jede Befragung – weil es auf gezeigtem, nicht auf behauptetem Geschmack basiert.
+
+Ein konkretes Beispiel: Eine Nutzerin wischt konsequent rechts bei Artikeln aus Holz oder Stein und
+links bei Kunststoff. Würde man sie fragen „Was ist dein Lieblingsmaterial?", könnte sie keine klare
+Antwort geben – die Präferenz ist ihr nicht bewusst. Aber das Modell lernt sie trotzdem, weil das
+Verhalten sie verrät. Genau diese **implizite Präferenzextraktion** ist der Kernwert von SecondSwipe.
+
+---
+
+## 4. Bayesianische Inferenz: Warum ein Posterior, warum Laplace?
+
+### 4.1 Warum Bayes'sch statt Maximum-Likelihood?
 
 Eine reine Maximum-Likelihood-Schätzung (MLE) liefert einen Punktwert, aber keine Aussage über
 Unsicherheit – und sie ist bei spärlichen Daten instabil (Überanpassung an wenige Wischer). Ein
@@ -109,7 +183,7 @@ Posterior(w | D) ∝ Likelihood(D | w) · Prior(w)
 Der Prior wirkt als **Regularisierer**: Bei null oder wenigen Wischern dominiert er und hält die
 Schätzung konservativ. Das ist exakt das Verhalten, das ein ehrlicher Kaltstart braucht.
 
-### 3.2 Warum die Laplace-Approximation?
+### 4.2 Warum die Laplace-Approximation?
 
 Vollständige Bayes'sche Inferenz über MCMC (Markov-Chain-Monte-Carlo) ist für ein Modell, das *bei
 jeder Empfehlungs-Request* neu trainiert wird, zu langsam. Die Laplace-Approximation
@@ -131,7 +205,7 @@ Nutzer-lokalen Modells ausreichend.**
 
 ---
 
-## 4. Exploration: Warum Thompson Sampling?
+## 5. Exploration: Warum Thompson Sampling?
 
 Ein Empfehler, der immer nur den erwarteten Bestwert zeigt, erkundet nie und verharrt in einer
 Filterblase. Die klassische Lösung ist Exploration. Wir wählen **Thompson Sampling**
@@ -161,7 +235,7 @@ ohnehin berechnen, und regelt Exploration/Exploitation ohne Stellschrauben.**
 
 ---
 
-## 5. Unsicherheit und Kalibrierung
+## 6. Unsicherheit und Kalibrierung
 
 Die Unsicherheit einer Vorhersage folgt aus der Kovarianzmatrix über die lineare Propagierung:
 
@@ -182,7 +256,7 @@ Diese Metriken erscheinen im Analyse-Tab als Teil des transparenten Profils.
 
 ---
 
-## 6. Verweildauer als weiches Signal
+## 7. Verweildauer als weiches Signal
 
 Neben dem binären Label erfasst SecondSwipe die **Betrachtungsdauer** einer Karte (zwischen Anzeige
 und Wisch). Sie ist ein Indikator für Ambivalenz: langes Zögern vor einem „Ja" deutet auf relevante
@@ -200,7 +274,7 @@ implizite Signale sind dicht, aber verrauscht und dürfen das harte Label nicht 
 
 ---
 
-## 7. Systemarchitektur und die Wahl des Weges
+## 8. Systemarchitektur und die Wahl des Weges
 
 ```
 Browser (React/Vite)
@@ -228,12 +302,12 @@ bei erfüllten Anforderungen.**
 - **Keine GPU.** Der Rechenaufwand ist lächerlich gering; die bewusste Abwesenheit einer
   Deep-Learning-Pipeline ist ein Feature, kein Mangel.
 
-Diese Route ist ein **Pilot-Kompromiss**, kein Skalierungsversprechen. Abschnitt 9 benennt die
+Diese Route ist ein **Pilot-Kompromiss**, kein Skalierungsversprechen. Abschnitt 10 benennt die
 Übergänge.
 
 ---
 
-## 8. Evaluierungsmethodik
+## 9. Evaluierungsmethodik
 
 Ein wissenschaftlich belastbarer Empfehler wird an drei Achsen gemessen:
 
@@ -243,12 +317,12 @@ Ein wissenschaftlich belastbarer Empfehler wird an drei Achsen gemessen:
 3. **Online-Regret.** Im Vergleich zu einer Zufalls-Baseline: Wie viele zusätzliche Likes erzeugt
    das Thompson-Sampling-Modell pro Sitzung? Regret ist das Mass für die Exploration/Exploitation-Güte.
 
-Die ehrliche Kaltstart-Erkenntnis aus Abschnitt 5 bleibt dabei sichtbar: **Mit sehr wenigen Wischern
+Die ehrliche Kaltstart-Erkenntnis aus Abschnitt 6 bleibt dabei sichtbar: **Mit sehr wenigen Wischern
 ist die Punktvorhersage nahezu zufällig, und das Produkt sagt das auch.**
 
 ---
 
-## 9. Grenzen und nächste Schritte
+## 10. Grenzen und nächste Schritte
 
 - **Laplace ist eine Gauss-Näherung.** Sie ist bei logistischer Regression gut, aber nicht exakt.
   Für höhere Ansprüche ist variational inference (VI) oder MCMC der nächste Schritt – beides gegen
@@ -278,6 +352,8 @@ ist die Punktvorhersage nahezu zufällig, und das Produkt sagt das auch.**
   *Bayesian Data Analysis* (3rd ed.). CRC Press.
 - Guo, C., Pleiss, G., Sun, Y., & Weinberger, K. Q. (2017). On calibration of modern neural
   networks. *Proceedings of the 34th International Conference on Machine Learning (ICML)*.
+- Greenwald, A. G., & Banaji, M. R. (1995). Implicit social cognition: Attitudes, self-esteem, and
+  stereotypes. *Psychological Review, 102*(1), 4–27.
 - Hu, Y., Koren, Y., & Volinsky, C. (2008). Collaborative filtering for implicit feedback datasets.
   *Proceedings of the IEEE International Conference on Data Mining (ICDM)*.
 - Koren, Y., Bell, R., & Volinsky, C. (2009). Matrix factorization techniques for recommender
@@ -285,8 +361,15 @@ ist die Punktvorhersage nahezu zufällig, und das Produkt sagt das auch.**
 - MacKay, D. J. C. (1992). Bayesian interpolation. *Neural Computation, 4*(3), 415–447.
 - Niculescu-Mizil, A., & Caruana, R. (2005). Predicting good probabilities with supervised
   learning. *Proceedings of the 22nd International Conference on Machine Learning (ICML)*.
+- Nosek, B. A., et al. (2007). Pervasiveness and correlates of implicit attitudes and stereotypes.
+  *European Review of Social Psychology, 18*(1), 36–88.
+- Radford, A., Kim, J. W., Hallacy, C., Ramesh, A., Agarwal, G., Dhariwal, S., & Sutskever, I.
+  (2021). Learning transferable visual models from natural language supervision (CLIP).
+  *Proceedings of the 38th International Conference on Machine Learning (ICML)*.
 - Russo, D., Van Roy, B., Kazerouni, A., Osband, I., & Wen, Z. (2018). A tutorial on Thompson
   sampling. *Foundations and Trends in Machine Learning, 11*(1), 1–96.
+- Samuelson, P. A. (1938). A note on the pure theory of consumer's behaviour. *Economica, 5*(18),
+  199–205.
 - Thompson, W. R. (1933). On the likelihood that one unknown probability exceeds another in view of
   the evidence of two samples. *Biometrika, 25*(3–4), 285–294.
 
