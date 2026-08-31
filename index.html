@@ -142,7 +142,7 @@
       <div class="sc front">
         <span class="pic">💡</span>Bauhaus-Leuchte<span class="price">CHF 85</span>
         <span class="stamp">JA</span>
-        <div class="prob"><b>78%</b> Punktschätzung<br>95%-Intervall: 40–97% · erst 8 Wischer</div>
+        <div class="prob"><b>78%</b> Like-Wahrscheinlichkeit</div>
       </div>
     </div>
   </div>
@@ -163,26 +163,19 @@
         Ein Wisch ist gezeigtes Verhalten: sauber, unverfälscht, binär (1/0).</p>
       </div>
       <div class="card"><span class="emoji">⚡</span>
-        <h3>Lernen ab dem 8. Wisch</h3>
-        <p>Nach jedem einzelnen Wisch wird das Modell neu trainiert. Ab acht
-        Entscheidungen ordnet es den Stapel – aber mit ehrlich grosser Unsicherheit,
-        die mit jedem Wisch kleiner wird.</p>
+        <h3>Lernt mit jedem Wisch</h3>
+        <p>Nach jeder Entscheidung wird dein Modell neu trainiert und ordnet den
+        Stapel live für dich – von Anfang an, und mit jedem Wisch besser.</p>
       </div>
       <div class="card"><span class="emoji">🔍</span>
-        <h3>Kein Blackbox-Deep-Learning</h3>
-        <p>Ein logistisches Modell mit Bayes-Posterior: jedes Gewicht ist einsehbar,
-        jede Vorhersage erklärbar. Bewusst einfach – und dadurch überprüfbar.</p>
-      </div>
-      <div class="card"><span class="emoji">📏</span>
-        <h3>Unsicherheit wird ehrlich ausgewiesen</h3>
-        <p>Jede Karte zeigt Punktschätzung plus 95%-Intervall – und das Intervall ist
-        bei wenigen Wischern breit, nicht vorgegaukelt präzise. Das Modell sagt, wie
-        sicher es sich wirklich ist.</p>
+        <h3>Keine Blackbox</h3>
+        <p>Kein undurchschaubares Deep-Learning. Das Modell ist bewusst einfach –
+        jede Entscheidung lässt sich nachvollziehen und erklären.</p>
       </div>
       <div class="card"><span class="emoji">🎰</span>
         <h3>Klug neugierig bleiben</h3>
-        <p>Thompson Sampling wägt ab zwischen sicheren Treffern und
-        unsicher-vielversprechenden Stücken – Exploration ohne handgestimmte Regler.</p>
+        <p>Das Modell wechselt selbstständig zwischen sicheren Treffern und neuen,
+        vielversprechenden Stücken – Neugier, die sich automatisch reguliert.</p>
       </div>
     </div>
   </div>
@@ -201,10 +194,9 @@
       <div class="step"><div><strong>Feature-Gewichte im Klartext.</strong>
         <p>Magst du Mid-Century mehr als Bauhaus? Holz mehr als Metall? Die gelernten
         Gewichte pro Kategorie, Ära, Material, Farbe und Preisband sind direkt sichtbar.</p></div></div>
-      <div class="step"><div><strong>Kalibrierung statt Bauchgefühl.</strong>
-        <p>Kalibrierungskurve und Konfusionsmatrix zeigen, ob die ausgewiesenen
-        Intervalle stimmen – sie bleiben breit, bis genug Wischer für belastbare
-        Schätzungen vorliegen.</p></div></div>
+      <div class="step"><div><strong>Ehrlichkeit statt Bauchgefühl.</strong>
+        <p>Das Modell zeigt dir, wo es gerade wirklich sicher ist – und wo noch nicht.
+        Keine Versprechen, die es nicht einhalten kann.</p></div></div>
       <div class="step"><div><strong>Volle Kontrolle.</strong>
         <p>Ein Klick setzt alle Wischer und das gelernte Modell zurück. Ein Wisch zu viel?
         Der Rewind-Knopf nimmt ihn zurück – auch aus den Trainingsdaten.</p></div></div>
@@ -250,8 +242,6 @@
     </div>
     <div class="facts">
       <span class="fact"><b>1</b> Wisch = <b>1</b> Trainingsbeispiel</span>
-      <span class="fact">Modell aktiv ab <b>8</b> Wischern</span>
-      <span class="fact">Intervalle: breit bei <b>8</b> Wischern, enger mit jedem Wisch</span>
       <span class="fact"><b>1</b> Modell pro Nutzer, <b>0</b> Tracker</span>
     </div>
   </div>
