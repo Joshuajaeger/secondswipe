@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SecondSwipe – Technische Doku</title>
+<style>
+  :root {
+    --bg: #fafafa;
+    --surface: #ffffff;
+    --text: #2d3748;
+    --muted: #4a5568;
+    --heading: #1a202d;
+    --border: #e2e8f0;
+    --coral: #e53e3e;
+    --blue: #3182ce;
+    --blue-dark: #2b6cb0;
+    --success: #38a169;
+    --code-bg: #f6f8fa;
+    --grad: linear-gradient(135deg, #e53e3e, #3182ce);
+    --radius: 16px;
+    --shadow: 0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -2px rgba(0,0,0,.1);
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.7;
+  }
+  .wrap { max-width: 820px; margin: 0 auto; padding: 0 24px; }
+
+  header { padding: 40px 0 8px; }
+  .crumb { font-size: .85rem; color: var(--muted); margin-bottom: 8px; }
+  .crumb a { color: var(--blue-dark); font-weight: 700; text-decoration: none; }
+  h1 { font-size: clamp(2rem, 5vw, 2.8rem); color: var(--heading); letter-spacing: -0.02em; }
+  .meta { color: var(--muted); font-size: .95rem; margin-top: 8px; }
+
+  section { padding: 40px 0; }
+  section h2 {
+    font-size: 1.5rem; color: var(--heading); letter-spacing: -0.01em; margin-bottom: 14px;
+    border-bottom: 2px solid var(--border); padding-bottom: 8px;
+  }
+  section h3 { font-size: 1.1rem; color: var(--heading); margin: 22px 0 8px; }
+  section p { margin-bottom: 12px; color: var(--text); }
+  .kicker {
+    text-transform: uppercase; letter-spacing: 0.12em; font-size: .76rem; font-weight: 800;
+    color: var(--blue); display: block; margin-bottom: 6px;
+  }
+
+  pre {
+    background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 18px; overflow-x: auto; font-size: .86rem; line-height: 1.55;
+    font-family: 'SF Mono', ui-monospace, Menlo, Consolas, monospace; margin: 12px 0 18px;
+  }
+  code { font-family: 'SF Mono', ui-monospace, Menlo, Consolas, monospace; }
+  p code, li code { background: var(--code-bg); border: 1px solid var(--border); border-radius: 5px; padding: 1px 6px; font-size: .85em; }
+  pre code { background: none; border: none; padding: 0; font-size: .86rem; }
+
+  table { width: 100%; border-collapse: collapse; margin: 14px 0 20px; font-size: .92rem; }
+  th, td { border: 1px solid var(--border); padding: 9px 12px; text-align: left; }
+  th { background: #f4f7fa; color: var(--heading); font-weight: 700; }
+  td code { font-size: .85em; }
+
+  .note {
+    border-left: 4px solid var(--blue); background: rgba(49,130,206,.06);
+    padding: 14px 18px; border-radius: 0 var(--radius) var(--radius) 0; margin: 18px 0;
+  }
+  .warn {
+    border-left: 4px solid var(--coral); background: rgba(229,62,62,.06);
+    padding: 14px 18px; border-radius: 0 var(--radius) var(--radius) 0; margin: 18px 0;
+  }
+  .tag {
+    display: inline-block; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 9999px; padding: 3px 12px; font-size: .82rem; font-weight: 600;
+    color: var(--muted); margin: 2px 4px 2px 0;
+  }
+
+  footer { text-align: center; padding: 40px 24px 60px; color: var(--muted); font-size: .9rem; }
+  footer a { color: var(--blue-dark); font-weight: 700; text-decoration: none; }
+</style>
+</head>
+<body>
+
+<header class="wrap">
+  <div class="crumb"><a href="index.html">← Zurück zur Pitch-Seite</a></div>
+  <span class="kicker">Technische Doku</span>
+  <h1>SecondSwipe unter der Haube</h1>
+  <p class="meta">Version 0.1 · Pilot · Stand 2025</p>
+</header>
+
+<section class="wrap">
+  <span class="kicker">Überblick</span>
+  <h2>Ein Bayes'sches Empfehlungsmodell in einer Request</h2>
+  <p>
+    Der Kern von SecondSwipe ist bewusst klein: ein <strong>logistisches Regressionsmodell
+    mit Bayes-Posterior</strong>, das pro Nutzer existiert und nach jedem Wisch in einer
+    einzelnen Request neu trainiert wird. Keine GPU, keine Datenpipeline, kein
+    Backend-Worker – das Modell fährt direkt im Request-Handler hoch.
+  </p>
+  <div>
+    <span class="tag">TypeScript</span>
+    <span class="tag">Node.js / Express</span>
+    <span class="tag">SQLite</span>
+    <span class="tag">React + Vite</span>
+    <span class="tag">Thompson Sampling</span>
+  </div>
+</section>
+
+<section class="wrap">
+  <span class="kicker">Modell</span>
+  <h2>1. Logistische Regression, Bayes'sch geregelt</h2>
+  <p>
+    Jedes Angebot wird auf ein Merkmalsvektor-Set abgebildet: Kategorie, Ära, Material,
+    Farbe, Preisband. Die Like-Wahrscheinlichkeit ist eine Sigmoid über der Linearkombination
+    der Gewichte:
+  </p>
+  <pre><code>p(like = 1 | x, w) = 1 / (1 + exp(-w · x))</code></pre>
+  <p>
+    Statt eines einzelnen Schätzwerts <code>w</code> halten wir eine <strong>Verteilung über
+    Gewichte</strong>. Wir starten mit einer breiten Prior-Normalverteilung und schlagen nach
+    jedem Wisch den Posterior über die analytische <strong>Laplace-Approximation</strong>
+    (Gauß-Posterior um das MAP) auf. Dadurch bekommen wir kostenlos eine Kovarianzmatrix und
+    damit Unsicherheitsmasse pro Vorhersage.
+  </p>
+  <pre><code>Posterior(w | D) ≈ N( w_MAP, H^-1 )</code></pre>
+  <p>
+    mit <code>w_MAP</code> als argmax der log-Posterior-Dichte und <code>H</code> als negativer
+    Hesse-Matrix – beide in einem einzelnen Optimierungsschritt aus den bisherigen Wischern.
+  </p>
+
+  <h3>Merkmalskodierung</h3>
+  <table>
+    <thead><tr><th>Gruppe</th><th>Beispiele</th><th>Kodierung</th></tr></thead>
+    <tbody>
+      <tr><td>Kategorie</td><td>Sofa, Leuchte, Stuhl, …</td><td>One-hot / Embedding</td></tr>
+      <tr><td>Ära</td><td>Mid-Century, Bauhaus, …</td><td>One-hot</td></tr>
+      <tr><td>Material</td><td>Holz, Metall, Stoff, …</td><td>One-hot</td></tr>
+      <tr><td>Farbe</td><td>Cognac, Schwarz, …</td><td>One-hot</td></tr>
+      <tr><td>Preisband</td><td>0–50, 50–150, 150+</td><td>Ordinal, z-standardisiert</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="wrap">
+  <span class="kicker">Exploration</span>
+  <h2>2. Thompson Sampling statt handgetunter Regler</h2>
+  <p>
+    Für die Kartenauswahl zeichnen wir pro Kandidat einen <strong>Gewichtsvektor aus dem
+    Posterior</strong>, bewerten die Karte damit und wählen die höchste gezogene
+    Like-Wahrscheinlichkeit. Karten mit breitem Posterior werden häufiger gezogen und damit
+    öfter explorert – Exploration und Exploitation entstehen automatisch, ohne einen einzigen
+    ε- oder Temperatur-Parameter.
+  </p>
+  <pre><code>for candidate in catalog:
+    w ~ N(w_MAP, H^-1)      // draw sample per candidate
+    score = sigmoid(w · x)
+pick argmax(score)</code></pre>
+  <p class="note">
+    Ergebnis: Bei wenigen Wischern ist der Posterior breit, das Modell verhält sich nahezu
+    zufällig und erkundet den Katalog. Mit jedem Wisch schrumpft die Unsicherheit und das
+    Sampling nähert sich der reinen Ausbeutung an.
+  </p>
+</section>
+
+<section class="wrap">
+  <span class="kicker">Unsicherheit</span>
+  <h2>3. Unsicherheit, die man ernst nimmt</h2>
+  <p>
+    Aus der Kovarianzmatrix berechnen wir per <strong>propagierter Unsicherheit</strong> ein
+    95%-Intervall für jede Like-Wahrscheinlichkeit. Entscheidend ist die <strong>ehrliche</strong>
+    Darstellung: Nach acht Wischern ist das Intervall sehr breit (z.&nbsp;B. 40–97%), nicht
+    künstlich eng. Erst mit genügend Daten nähert es sich einem präzisen Wert an.
+  </p>
+  <pre><code>var = (∂p/∂w)ᵀ H⁻¹ (∂p/∂w)
+ci95 = p ± 1.96 · sqrt(var)</code></pre>
+  <p>
+    Die <strong>Kalibrierung</strong> wird gemessen, nicht behauptet: Kalibrierungskurve und
+    Konfusionsmatrix vergleichen die ausgewiesenen Intervalle mit den tatsächlich
+    beobachteten Likes. Solange zu wenige Wischer vorliegen, weist die UI das Modell selbst
+    als "unsicher" aus.
+  </p>
+  <div class="warn">
+    <strong>Cold-Start ehrlich behandeln.</strong> Mit 8 binären Samples ist jede Punktschätzung
+    ein Zufallstreffer. SecondSwipe blendet das nicht aus – es zeigt das breite Intervall, damit
+    Nutzer und Betreiber sehen, wo das Modell gerade steht.
+  </div>
+</section>
+
+<section class="wrap">
+  <span class="kicker">Architektur</span>
+  <h2>4. Eine kleine Cloud-Maschine, eine Request</h2>
+  <pre><code>Browser (React/Vite)
+    │  HTTP
+    ▼
+Express (Node.js)
+    ├─ /api/recommend   → Modell laden/trainieren, Thompson-Sample, Top-K zurück
+    ├─ /api/swipe       → Wisch speichern, Posterior aktualisieren
+    ├─ /api/profile     → Gewichte, Kalibrierung, Reset
+    └─ SQLite (per-User Modelle &amp; Wischer)
+</code></pre>
+  <p>
+    Jeder Nutzer hat ein eigenes Modell, das <strong>nur auf den eigenen Wischern</strong>
+    trainiert wird – keine geteilten Nutzerdaten, keine Tracker. Das Modell wird pro Request
+    aus den SQLite-Zeilen des Nutzers aufgebaut; bei Pilot-Größe (wenige tausend Wischer pro
+    Nutzer) ist das in Millisekunden machbar.
+  </p>
+  <h3>Request-Ablauf für eine Empfehlung</h3>
+  <pre><code>GET /api/recommend
+1. Wischer des Nutzers laden (SQLite)
+2. Laplace-Approximation → w_MAP, H⁻¹
+3. Kandidaten aus Katalog ziehen
+4. Pro Kandidat: Gewichtssample, Sigmoid, Score
+5. Intervall berechnen, Metadaten anreichern
+6. Top-K zurückgeben</code></pre>
+</section>
+
+<section class="wrap">
+  <span class="kicker">Kontrollfunktionen</span>
+  <h2>5. Zurücksetzen, Rewind, keine Datenreste</h2>
+  <p>
+    Alle Steuerung ist auf Datenebene simpel und robust:
+  </p>
+  <ul style="margin:0 0 16px 20px">
+    <li style="margin-bottom:8px"><strong>Rewind:</strong> Der letzte Wisch wird aus den Trainingszeilen entfernt und der Posterior auf dem reduzierten Datensatz neu gefittet – das Modell "vergisst" den Ausrutscher tatsächlich.</li>
+    <li style="margin-bottom:8px"><strong>Reset:</strong> Alle Wischer und das gelernte Modell werden gelöscht; der Nutzer startet mit frischem Prior.</li>
+    <li><strong>0 Tracker:</strong> Es gibt keine serverseitige Cross-User-Verknüpfung; jede Vorhersage lebt im Request-Scope.</li>
+  </ul>
+</section>
+
+<section class="wrap">
+  <span class="kicker">Stack</span>
+  <h2>6. Technologie &amp; Deployment</h2>
+  <table>
+    <thead><tr><th>Schicht</th><th>Wahl</th><th>Warum</th></tr></thead>
+    <tbody>
+      <tr><td>Frontend</td><td><code>React + Vite</code></td><td>Schnelle Entwicklung, schnell deployed</td></tr>
+      <tr><td>Backend</td><td><code>Express</code></td><td>Minimal, eine Prozess-Instanz</td></tr>
+      <tr><td>Datenbank</td><td><code>SQLite</code></td><td>Kein Server-Overhead, gut für Pilot</td></tr>
+      <tr><td>ML</td><td><code>reines TypeScript</code></td><td>Kein externes ML-Runtime, verständlich</td></tr>
+      <tr><td>Hosting</td><td><code>Fly.io (eine kleine VM)</code></td><td>Ein Befehl deployt</td></tr>
+    </tbody>
+  </table>
+  <p>
+    Das ist bewusst kein Produktions-Scale-Setup, sondern ein <strong>Pilot</strong>: in
+    Minuten deployt, komplett nachvollziehbar, jederzeit in eine grössere Architektur
+    (Postgres, separates Inferenz-Service) überführbar.
+  </p>
+</section>
+
+<section class="wrap">
+  <span class="kicker">Grenzen</span>
+  <h2>7. Was es nicht kann (noch)</h2>
+  <ul style="margin:0 0 20px 20px">
+    <li style="margin-bottom:8px"><strong>Kalter Start ohne Nutzerdaten:</strong> Erstes Profiling ist nahezu Zufall – bewusst, und als breite Intervalle sichtbar.</li>
+    <li style="margin-bottom:8px"><strong>Cross-User-Personalisierung:</strong> Bewusst ausgeschlossen (0 Tracker). Cold-Start-Hilfe über Ähnlichkeitsseeds wäre ein nächster Schritt.</li>
+    <li><strong>Skalierung:</strong> Laplace + SQLite sind für Tausende, nicht Millionen Nutzer gedacht. Wechsel auf Postgres/Streaming-Inferenz ist der geplante Pfad.</li>
+  </ul>
+</section>
+
+<footer>
+  <p><b>SecondSwipe</b> · <a href="index.html">Pitch</a> · <a href="https://secondswipe-pilot.fly.dev">Pilot</a></p>
+  <p>Wischen. Lernen. Wiederverwenden.</p>
+</footer>
+
+</body>
+</html>
