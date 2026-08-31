@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SecondSwipe – Geschäftsfall-Papier</title>
+<style>
+  :root {
+    --bg: #fafafa; --text: #2d3748; --muted: #4a5568; --heading: #1a202d;
+    --border: #e2e8f0; --blue: #3182ce; --blue-dark: #2b6cb0;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    font-family: Georgia, 'Times New Roman', serif; background: var(--bg); color: var(--text);
+    line-height: 1.75; max-width: 72ch; margin: 0 auto; padding: 48px 24px 64px;
+  }
+  h1 { font-size: 1.9rem; letter-spacing: -0.02em; text-align: center; margin-bottom: 4px; }
+  .subtitle { text-align: center; font-style: italic; color: var(--muted); font-size: 1.05rem; margin-bottom: 24px; }
+  .meta { text-align: center; color: var(--muted); font-size: .88rem; margin-bottom: 36px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
+  h2 { font-size: 1.25rem; margin: 36px 0 12px; color: var(--heading); letter-spacing: -0.01em; }
+  h3 { font-size: 1.05rem; margin: 24px 0 8px; color: var(--heading); }
+  p { margin-bottom: 14px; }
+  blockquote { border-left: 3px solid var(--blue); padding: 10px 18px; margin: 18px 0; background: rgba(49,130,206,.04); font-style: italic; }
+  ul, ol { margin: 10px 0 16px 24px; }
+  li { margin-bottom: 6px; }
+  code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .88em; background: #f1f3f5; padding: 1px 5px; border-radius: 3px; }
+  pre { background: #f6f8fa; border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; overflow-x: auto; font-size: .85rem; line-height: 1.55; font-family: ui-monospace, Menlo, Consolas, monospace; margin: 14px 0 18px; }
+  pre code { background: none; padding: 0; }
+  .refs { margin-top: 40px; border-top: 1px solid var(--border); padding-top: 20px; font-size: .9rem; }
+  .refs li { margin-bottom: 10px; }
+  a { color: var(--blue-dark); font-weight: 600; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  footer { text-align: center; margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--muted); font-size: .88rem; }
+</style>
+</head>
+<body>
+
+<h1>SecondSwipe: Wertentdeckung in der Kreislaufwirtschaft</h1>
+<p class="subtitle">Ein Geschäftsfall für wischbasierte Produktempfehlung im Second-Hand-Markt</p>
+<div class="meta">Öffentliches Arbeitspapier · Version 1.0 · 2025<br>
+<a href="../index.html">← Zurück zur Pitch-Seite</a></div>
+
+<h2>Abstract</h2>
+<p>Gebrauchtmarktplätze sind heute Suchmaschinen: Sie setzen voraus, dass die Nutzerin bereits weiss, wonach sie sucht. Genau dort verlieren sie den grössten Teil ihres Werts – die Entdeckung des Unbekannten. SecondSwipe kehrt die Interaktion um: Der Katalog kommt als wischbarer Strom zur Nutzerin, eine Entscheidung pro Artikel. Jeder Wisch ist zugleich ein perfekt gelabeltes, binäres Verhaltenssignal, das ein persönliches Empfehlungsmodell speist. Dieses Arbeitspapier begründet den Geschäftsfall entlang dreier literaturgestützter Säulen: (1) der Psychologie der Wahlüberlastung, (2) der Ökonomik der Kreislaufwirtschaft und (3) der Theorie des impliziten Feedbacks in Empfehlungssystemen.</p>
+
+<h2>1. Problemstellung</h2>
+<p>Zweitmarktkataloge sind strukturell auf <em>Bekanntes</em> optimiert: Filter, Suchbegriffe und Kategorien belohnen die Nutzerin, die bereits einen konkreten Begriff im Kopf hat. Der weitaus grössere Wert liegt jedoch im <em>Unbekannten</em> – dem Einzelstück, das man nicht gesucht hat, aber sofort will. Dieser Wert bleibt systematisch liegen, weil die Interaktion ihn nicht zugänglich macht.</p>
+<p>Drei Beobachtungen verschärfen das Problem:</p>
+<ol>
+<li><strong>Suchbasiertes Stöbern ist Arbeit.</strong> Jede Suchanfrage ist eine kognitive Hypothese über den eigenen Geschmack. Wer keinen Begriff hat, hat keinen Einstieg.</li>
+<li><strong>Relevante Treffer werden verdünnt.</strong> In langen Ergebnislisten sinkt die Sichtbarkeit guter Treffer; die Wahrscheinlichkeit, das richtige Stück zu sehen, fällt mit der Position.</li>
+<li><strong>Präferenzen werden erfragt statt beobachtet.</strong> Klassische Marktplätze fragen nach Interessen (Kategorien, Suchagenten). Solche Selbstauskünfte sind notorisch unzuverlässig.</li>
+</ol>
+<p>SecondSwipe adressiert alle drei Punkte mit einer einzigen Designentscheidung: <em>eine Karte, eine Entscheidung, ein Wisch.</em></p>
+
+<h2>2. Theoretische Grundlagen</h2>
+
+<h3>2.1 Die Psychologie der Wahlüberlastung (Choice Overload)</h3>
+<p>Die klassische Studie von <strong>Iyengar &amp; Lepper (2000)</strong> zeigte am Verkaufsstand für Konfitüre: Ein grösseres Sortiment (24 Sorten) zog zwar mehr Interessenten an (60 % blieben stehen gegenüber 40 % bei 6 Sorten), führte aber zu dramatisch weniger Käufen (3 % gegenüber 30 %). <strong>Schwartz (2004)</strong> popularisierte diesen Befund als „Paradox of Choice": Mehr Optionen erhöhen die kognitive Last, nicht die Zufriedenheit.</p>
+<p>Die Forschung ist differenzierter, als die populäre Lesart nahelegt. Die Meta-Analyse von <strong>Scheibehenne, Greifeneder &amp; Todd (2010)</strong> zeigt, dass der Wahlüberlastungseffekt nicht universell ist, sondern von Moderatoren abhängt – insbesondere davon, ob die Nutzerin klare Präferenzen hat, wie die Optionen präsentiert werden und wie viel Aufwand die Bewertung erfordert. Die konzeptuelle Übersicht von <strong>Chernev, Böckenholt &amp; Goodman (2015)</strong> bestätigt diesen moderierenden Charakter.</p>
+<p>Für SecondSwipe ist das die zentrale Lehre: <strong>Nicht die Zahl der Optionen ist das Problem, sondern die Gleichzeitigkeit der Bewertung.</strong> Ein Wisch präsentiert genau eine Option zur Zeit und reduziert die Entscheidung auf ein binäres Urteil. Das entschärft die Überlast nicht durch weniger Sortiment, sondern durch eine <em>sequentielle</em> statt <em>simultane</em> Wahlarchitektur. Die Bewertungslast pro Moment sinkt auf ihr Minimum: eine binäre, affektive Reaktion („Ja" / „Nein"), die Kahneman (2011) als System-1-Urteil beschreibt – schnell, intuitiv, nahezu kostenlos.</p>
+
+<h3>2.2 Die Ökonomik der Kreislaufwirtschaft</h3>
+<p>Die Kreislaufwirtschaft ist kein Nischenphänomen, sondern ein etablierter Rahmen zur Entkopplung von Wertschöpfung und Ressourcenverbrauch. <strong>Kirchherr, Reike &amp; Hekkert (2017)</strong> definieren sie anhand von 114 untersuchten Definitionen als ein System, das Abfall durch Reduktion, Wiederverwendung und Recycling minimiert. <strong>Geissdoerfer et al. (2017)</strong> grenzen die Kreislaufwirtschaft von Nachhaltigkeit ab und betonen den Wiederverwendungskreislauf (<em>reuse</em>) als Kernmechanismus.</p>
+<p>Für den Wiederverkauf ist entscheidend: <strong>Der Flaschenhals der Kreislaufwirtschaft ist nicht die Bereitschaft, sondern die Auffindbarkeit.</strong> Ein Artikel, der nicht wiederentdeckt wird, verlässt den Kreislauf – unabhängig davon, wie nachhaltig er ursprünglich hergestellt wurde. Jede erfolgreiche Wiederentdeckung eines gebrauchten Stücks substituiert potenziell eine Neuproduktion. SecondSwipe positioniert sich damit nicht als „grünes" Produkt, sondern als <strong>Infrastruktur für Wiederverwendung</strong>: Es senkt die Transaktionskosten der Wiederentdeckung und erhöht dadurch die Durchsatzrate des Reuse-Kreislaufs. Die <strong>Ellen MacArthur Foundation</strong> beschreibt genau diese Rolle – Plattformen, die Wiederverwendung skalierbar machen – als zentralen Hebel der Kreislaufwirtschaft.</p>
+
+<h3>2.3 Implizites Feedback und Empfehlungssysteme</h3>
+<p>Empfehlungssysteme klassifiziert die Literatur traditionell nach der Signalquelle. <strong>Koren, Bell &amp; Volinsky (2009)</strong> etablierten mit Matrix-Faktorisierung den Standard für <em>explizites</em> Feedback (Bewertungen) und erweiterten ihn auf <em>implizite</em> Signale. <strong>Hu, Koren &amp; Volinsky (2008)</strong> zeigten, dass implizite Signale (Klicks, Käufe) dichter und ehrlicher sind als explizite Bewertungen, aber eine sorgfältige Behandlung erfordern, weil sie Rauschen enthalten. Das Handbuch von <strong>Ricci, Rokach &amp; Shapira (2011)</strong> systematisiert diese Unterscheidung.</p>
+<p>Ein Wisch ist ein Sonderfall des impliziten Feedbacks mit zwei bemerkenswerten Eigenschaften:</p>
+<ol>
+<li><strong>Binär und damit eindeutig gelabelt.</strong> Ein Wisch nach rechts ist ein positives, ein Wisch nach links ein negatives Label. Es gibt keine fünfstufige Skala mit individueller Kalibrierung – das Signal ist für jede Nutzerin identisch kodiert.</li>
+<li><strong>Verhaltensbasiert statt selbstberichtet.</strong> Der Wisch ist <em>gezeigtes</em> Verhalten. Die psychologische Literatur ist hier eindeutig: Selbstauskünfte über Präferenzen sind systematisch verzerrt (soziale Erwünschtheit, mangelnde Introspektion). Beobachtetes Verhalten umgeht diese Verzerrung.</li>
+</ol>
+<p>Diese Eigenschaften machen jeden Wisch zu einem <em>perfekt gelabelten Trainingsbeispiel</em> – ein ungewöhnlich sauberes Signal für ein Empfehlungssystem.</p>
+
+<h2>3. Das Produkt</h2>
+<p>SecondSwipe präsentiert Second-Hand-Artikel als Kartenstapel. Die Nutzerin wischt nach rechts („gefällt mir") oder links („nicht"). Aus den Wischern lernt ein persönliches Modell, das den Stapel fortlaufend neu ordnet. Drei Merkmale definieren das Produkt:</p>
+<ul>
+<li><strong>Sequenzielle Entscheidung statt Suche.</strong> Eine Option zur Zeit, eine binäre Reaktion. Kein Filterformular, keine Suchsyntax.</li>
+<li><strong>Transparentes Profil.</strong> Die Nutzerin sieht, was das Modell über sie gelernt hat – als lesbare Präferenzen („Mid-Century stärker als Bauhaus") statt als Blackbox.</li>
+<li><strong>Privatsphäre durch Architektur.</strong> Ein Modell pro Nutzerin, trainiert ausschliesslich auf den eigenen Wischern. Keine Cross-User-Verknüpfung, keine Tracker.</li>
+</ul>
+
+<h2>4. Warum die binäre Entscheidung der strategische Kern ist</h2>
+<p>Der Wisch ist kein UX-Detail, sondern die Geschäftslogik selbst. Die Argumentation:</p>
+<ol>
+<li><strong>Niedrigste Bewertungskosten.</strong> Die psychologische Literatur zeigt, dass die Bereitschaft zur Interaktion mit der kognitiven Last sinkt. Eine binäre, affektive Reaktion hat die geringstmögliche Last. Das maximiert die Zahl der Signale pro Nutzerin pro Sitzung.</li>
+<li><strong>Saubere Labels.</strong> Jede Nutzerin produziert dieselbe, unverzerrte Signalstruktur. Das ist die Voraussetzung dafür, dass ein Modell überhaupt verlässlich lernen kann – und ein Kontrast zu Selbstauskünften, die von Nutzerin zu Nutzerin anders kalibriert sind.</li>
+<li><strong>Kalte Starts bleiben ehrlich.</strong> Mit wenigen Wischern ist das Modell bewusst unsicher. SecondSwipe verschweigt das nicht, sondern zeigt es. Diese Ehrlichkeit ist ein Vertrauensmerkmal und unterscheidet das Produkt von Blackbox-Algorithmen, die Zuversicht simulieren.</li>
+<li><strong>Ein kontinuierlicher Datenstrom.</strong> Jeder Wisch ist ein neues Label. Das Modell verbessert sich mit jeder Interaktion, ohne dass die Nutzerin etwas „zusätzlich" tun müsste. Lernen ist ein Nebenprodukt der Nutzung.</li>
+</ol>
+
+<h2>5. Markt und Geschäftsmodell</h2>
+<p>Der Second-Hand-Markt wächst strukturell – getrieben von Nachhaltigkeitsbewusstsein, Preisvorteilen und der Normalisierung von Wiederverkauf. Branchenberichte (u. a. der <strong>Ellen MacArthur Foundation</strong> und die jährlichen Resale-Reports der Industrie) dokumentieren dieses Wachstum über Mode, Möbel und Elektronik hinweg.</p>
+<p>SecondSwipe monetarisiert nicht über Daten, sondern über die <strong>Wiederverkaufs-Transaktion</strong>, die seine Empfehlung auslöst:</p>
+<ul>
+<li><strong>Vermittlungsprovision</strong> auf verkaufte Artikel, die über die Merkliste (alle Rechts-Wischer) in einen Kauf münden.</li>
+<li><strong>Partner-/Affiliate-Modelle</strong> mit bestehenden Marktplätzen, deren Katalog SecondSwipe erschliesst.</li>
+</ul>
+<p>Der strategische Vorteil ist die <strong>Empfehlungsqualität als Differenzierungsmerkmal</strong>: Je besser die Wiederentdeckung, desto höher die Konversion und desto wertvoller die Vermittlung. Die Datenmenge (Wischer) ist zugleich der Lernstoff, der die Empfehlung weiter verbessert – ein positiver Rückkopplungskreislauf, der mit jeder Nutzerin stärker wird.</p>
+
+<h2>6. Grenzen und Risiken</h2>
+<p>Ein universitär belastbarer Geschäftsfall benennt auch die Schwächen:</p>
+<ul>
+<li><strong>Kalter Start.</strong> Die ersten Wischer sind nahezu zufällig; das Produkt braucht eine kritische Masse an Interaktionen, bevor die Empfehlung spürbar wird. (Siehe das <a href="technical.html">technische Papier</a> für die quantitative Behandlung.)</li>
+<li><strong>Verweildauer als schwaches Signal.</strong> Die Betrachtungszeit einer Karte ist ein nützlicher, aber verrauschter Indikator für Ambivalenz – sie wird nur als weiche Gewichtung eingesetzt.</li>
+<li><strong>Einzelmarktplatz-Abhängigkeit.</strong> Als Vermittler ist SecondSwipe auf Katalogzugänge angewiesen; Exklusivität oder Datenzugang sind Verhandlungssache.</li>
+<li><strong>Skalierung.</strong> Das bewusst einfache Modell ist für Tausende, nicht Millionen Nutzer ausgelegt. Der Übergang zu grösserer Architektur ist geplant, aber nicht trivial.</li>
+</ul>
+
+<h2>7. Fazit</h2>
+<p>SecondSwipe begründet seinen Geschäftsfall nicht durch mehr Features, sondern durch eine präzisere Interaktion: die Reduktion der Produktbewertung auf ein einziges, binäres, beobachtbares Signal. Die Literatur zur Wahlüberlastung erklärt, warum diese Reduktion die Bewertungslast senkt; die Kreislaufwirtschaftsliteratur erklärt, warum Wiederentdeckung der entscheidende Engpass ist; die Empfehlungssystemliteratur erklärt, warum ein binäres Verhaltenssignal ein ungewöhnlich sauberes Lernsignal ist. Gemeinsam begründen diese drei Stränge, warum SecondSwipe nicht nur ein weiterer Marktplatz ist, sondern eine andere Art, Second-Hand zu entdecken.</p>
+
+<div class="refs">
+<h2>Referenzen</h2>
+<ul>
+<li>Chernev, A., Böckenholt, U., &amp; Goodman, J. (2015). Choice overload: A conceptual review and meta-analysis. <em>Journal of Consumer Psychology, 25</em>(2), 333–358.</li>
+<li>Geissdoerfer, M., Savaget, P., Bocken, N. M. P., &amp; Hultink, E. J. (2017). The Circular Economy – A new sustainability paradigm? <em>Journal of Cleaner Production, 143</em>, 757–768.</li>
+<li>Hu, Y., Koren, Y., &amp; Volinsky, C. (2008). Collaborative filtering for implicit feedback datasets. <em>Proceedings of the IEEE International Conference on Data Mining (ICDM)</em>.</li>
+<li>Iyengar, S. S., &amp; Lepper, M. R. (2000). When choice is demotivating: Can one desire too much of a good thing? <em>Journal of Personality and Social Psychology, 79</em>(6), 995–1006.</li>
+<li>Kahneman, D. (2011). <em>Thinking, Fast and Slow</em>. Farrar, Straus and Giroux.</li>
+<li>Kirchherr, J., Reike, D., &amp; Hekkert, M. (2017). Conceptualizing the circular economy: An analysis of 114 definitions. <em>Resources, Conservation and Recycling, 127</em>, 221–232.</li>
+<li>Koren, Y., Bell, R., &amp; Volinsky, C. (2009). Matrix factorization techniques for recommender systems. <em>Computer, 42</em>(8), 30–37.</li>
+<li>Ricci, F., Rokach, L., &amp; Shapira, B. (2011). <em>Recommender Systems Handbook</em>. Springer.</li>
+<li>Scheibehenne, B., Greifeneder, R., &amp; Todd, P. M. (2010). Can there ever be too many options? A meta-analytic review of choice overload. <em>Journal of Consumer Research, 37</em>(3), 409–425.</li>
+<li>Schwartz, B. (2004). <em>The Paradox of Choice: Why More Is Less</em>. Ecco.</li>
+<li>Ellen MacArthur Foundation. <em>Circular Economy Reports</em>. (Laufende Publikationsreihe.)</li>
+</ul>
+</div>
+
+<footer>
+<p><a href="../index.html">← Zurück zur Pitch-Seite</a> · <a href="technical.html">Technisches Papier →</a></p>
+<p>SecondSwipe · Öffentliches Arbeitspapier</p>
+</footer>
+
+</body>
+</html>

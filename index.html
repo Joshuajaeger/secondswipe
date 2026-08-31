@@ -6,19 +6,11 @@
 <title>SecondSwipe – Pitch</title>
 <style>
   :root {
-    --bg: #fafafa;
-    --surface: #ffffff;
-    --text: #2d3748;
-    --muted: #4a5568;
-    --heading: #1a202d;
-    --border: #e2e8f0;
-    --coral: #e53e3e;
-    --blue: #3182ce;
-    --blue-dark: #2b6cb0;
-    --success: #38a169;
+    --bg: #fafafa; --surface: #ffffff; --text: #2d3748; --muted: #4a5568;
+    --heading: #1a202d; --border: #e2e8f0; --coral: #e53e3e; --blue: #3182ce;
+    --blue-dark: #2b6cb0; --success: #38a169;
     --grad: linear-gradient(135deg, #e53e3e, #3182ce);
-    --radius: 16px;
-    --shadow: 0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -2px rgba(0,0,0,.1);
+    --radius: 16px; --shadow: 0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -2px rgba(0,0,0,.1);
   }
   * { box-sizing: border-box; margin: 0; }
   body {
@@ -26,8 +18,6 @@
     background: var(--bg); color: var(--text); line-height: 1.65;
   }
   .wrap { max-width: 880px; margin: 0 auto; padding: 0 24px; }
-
-  /* Hero */
   .hero { text-align: center; padding: 88px 24px 64px; background: linear-gradient(180deg, #f8fafc, #fafafa); }
   .hero .logo { font-size: 4rem; line-height: 1; }
   .hero h1 {
@@ -39,14 +29,12 @@
     display: inline-block; margin-top: 28px; padding: 14px 32px; border-radius: 9999px;
     background: var(--grad); color: #fff; font-weight: 700; text-decoration: none; box-shadow: var(--shadow);
   }
-
   section { padding: 56px 0; }
   section h2 { font-size: 1.9rem; color: var(--heading); letter-spacing: -0.01em; margin-bottom: 8px; }
   section .lead { color: var(--muted); font-size: 1.08rem; max-width: 640px; margin-bottom: 28px; }
   .kicker {
     text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.78rem; font-weight: 800; color: var(--blue);
   }
-
   .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; }
   .card {
     background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
@@ -55,11 +43,8 @@
   .card .emoji { font-size: 1.8rem; }
   .card h3 { color: var(--heading); font-size: 1.05rem; margin: 8px 0 6px; }
   .card p { font-size: 0.94rem; color: var(--muted); }
-
   .split { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: center; }
   @media (max-width: 720px) { .split { grid-template-columns: 1fr; } }
-
-  /* Fake swipe card illustration */
   .demo { position: relative; height: 330px; }
   .demo .sc {
     position: absolute; inset: 0; margin: auto; width: 230px; height: 300px;
@@ -81,7 +66,6 @@
     position: absolute; bottom: 14px; left: 14px; background: rgba(0,0,0,.72); color: #fff;
     border-radius: 8px; padding: 5px 9px; font-size: .72rem; font-weight: 600; text-align: left; line-height: 1.3;
   }
-
   .steps { counter-reset: step; display: grid; gap: 14px; }
   .step { display: flex; gap: 16px; align-items: flex-start; }
   .step::before {
@@ -91,20 +75,29 @@
   }
   .step strong { color: var(--heading); }
   .step p { color: var(--muted); font-size: .96rem; }
-
   .quote {
     border-left: 4px solid var(--blue); background: rgba(49,130,206,.06);
     padding: 18px 22px; border-radius: 0 var(--radius) var(--radius) 0; margin: 26px 0;
     font-size: 1.05rem; color: var(--heading);
   }
-
   .facts { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 24px; }
   .fact {
     background: var(--surface); border: 1px solid var(--border); border-radius: 9999px;
     padding: 8px 18px; font-size: .9rem; font-weight: 600; color: var(--muted);
   }
   .fact b { color: var(--heading); }
-
+  .papers {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; margin-top: 28px;
+  }
+  .paper {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 22px; box-shadow: 0 1px 3px rgba(0,0,0,.08); text-decoration: none; color: inherit;
+    transition: box-shadow .2s;
+  }
+  .paper:hover { box-shadow: var(--shadow); }
+  .paper .type { font-size: .78rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--blue); }
+  .paper h3 { color: var(--heading); font-size: 1.1rem; margin: 8px 0 6px; }
+  .paper p { font-size: .9rem; color: var(--muted); }
   footer { text-align: center; padding: 48px 24px 64px; color: var(--muted); font-size: .9rem; }
   footer a { color: var(--blue-dark); font-weight: 700; text-decoration: none; }
   .alt { background: #f4f7fa; }
@@ -203,7 +196,7 @@
     </div>
     <div class="quote">
       „Jeder Nutzer bekommt sein eigenes Modell, trainiert nur auf den eigenen Wischern –
-      nachvollziehbar bis ins letzte Gewicht. Personalisierung ohne Überwachungsgefühl.“
+      nachvollziehbar bis ins letzte Gewicht. Personalisierung ohne Überwachungsgefühl."
     </div>
   </div>
 </section>
@@ -248,6 +241,42 @@
 </section>
 
 <section>
+  <div class="wrap">
+    <span class="kicker">Wissenschaftlich fundiert</span>
+    <h2>Warum das funktioniert — und warum es so gebaut ist.</h2>
+    <p class="lead">
+      SecondSwipe steht auf drei wissenschaftlichen Säulen: der Psychologie der Wahlüberlastung
+      (<strong>Iyengar &amp; Lepper, 2000</strong>; <strong>Schwartz, 2004</strong>), der Ökonomik
+      der Kreislaufwirtschaft (<strong>Kirchherr et al., 2017</strong>; <strong>Ellen MacArthur
+      Foundation</strong>) und der Theorie des impliziten Feedbacks in Empfehlungssystemen
+      (<strong>Koren et al., 2009</strong>; <strong>Hu et al., 2008</strong>). Die bewusste
+      Reduktion auf eine binäre Entscheidung senkt die Bewertungslast auf ihr Minimum und liefert
+      gleichzeitig das sauberste mögliche Lernsignal.
+    </p>
+    <p class="lead">
+      Das technische Fundament — ein Bayes'sches logistisches Modell mit Laplace-Approximation und
+      Thompson Sampling — wurde gewählt, weil es bei spärlichen Daten ehrlich bleibt, interpretierbar
+      ist und Exploration ohne handgestimmte Parameter regelt. Alles dazu steht in unseren
+      öffentlichen Arbeitspapieren.
+    </p>
+    <div class="papers">
+      <a class="paper" href="papers/business-case.html">
+        <span class="type">Geschäftsfall-Papier</span>
+        <h3>Wertentdeckung in der Kreislaufwirtschaft</h3>
+        <p>Warum die binäre Interaktion den Engpass der Wiederentdeckung löst — begründet mit
+        Literatur zur Wahlüberlastung, Kreislaufökonomie und implizitem Feedback.</p>
+      </a>
+      <a class="paper" href="papers/technical.html">
+        <span class="type">Technisches Papier</span>
+        <h3>Bayes'sche Empfehlung aus spärlichem Feedback</h3>
+        <p>Warum wir logistische Regression + Bayesian Posterior + Thompson Sampling gewählt haben —
+        mit voller Begründung, Alternativenabwägung und Evaluierungsmethodik.</p>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="alt">
   <div class="wrap">
     <span class="kicker">Unter der Haube</span>
     <h2>Bewusst leichtgewichtig.</h2>

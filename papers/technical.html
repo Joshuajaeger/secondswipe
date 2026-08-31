@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SecondSwipe – Technisches Papier</title>
+<style>
+  :root {
+    --bg: #fafafa; --text: #2d3748; --muted: #4a5568; --heading: #1a202d;
+    --border: #e2e8f0; --blue: #3182ce; --blue-dark: #2b6cb0;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    font-family: Georgia, 'Times New Roman', serif; background: var(--bg); color: var(--text);
+    line-height: 1.75; max-width: 72ch; margin: 0 auto; padding: 48px 24px 64px;
+  }
+  h1 { font-size: 1.9rem; letter-spacing: -0.02em; text-align: center; margin-bottom: 4px; }
+  .subtitle { text-align: center; font-style: italic; color: var(--muted); font-size: 1.05rem; margin-bottom: 24px; }
+  .meta { text-align: center; color: var(--muted); font-size: .88rem; margin-bottom: 36px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
+  h2 { font-size: 1.25rem; margin: 36px 0 12px; color: var(--heading); letter-spacing: -0.01em; }
+  h3 { font-size: 1.05rem; margin: 24px 0 8px; color: var(--heading); }
+  p { margin-bottom: 14px; }
+  blockquote { border-left: 3px solid var(--blue); padding: 10px 18px; margin: 18px 0; background: rgba(49,130,206,.04); font-style: italic; }
+  ul, ol { margin: 10px 0 16px 24px; }
+  li { margin-bottom: 6px; }
+  code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .88em; background: #f1f3f5; padding: 1px 5px; border-radius: 3px; }
+  pre { background: #f6f8fa; border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; overflow-x: auto; font-size: .85rem; line-height: 1.55; font-family: ui-monospace, Menlo, Consolas, monospace; margin: 14px 0 18px; }
+  pre code { background: none; padding: 0; }
+  .refs { margin-top: 40px; border-top: 1px solid var(--border); padding-top: 20px; font-size: .9rem; }
+  .refs li { margin-bottom: 10px; }
+  a { color: var(--blue-dark); font-weight: 600; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  footer { text-align: center; margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--muted); font-size: .88rem; }
+</style>
+</head>
+<body>
+
+<h1>SecondSwipe: Bayes'sche Empfehlung aus spärlichem, binärem Feedback</h1>
+<p class="subtitle">Technisches Arbeitspapier zu Modellwahl, Inferenz und Systemarchitektur</p>
+<div class="meta">Öffentliches Arbeitspapier · Version 1.0 · 2025<br>
+<a href="../index.html">← Zurück zur Pitch-Seite</a></div>
+
+<h2>Abstract</h2>
+<p>SecondSwipe empfiehlt Second-Hand-Artikel aus einem Strom binärer Wisch-Entscheidungen. Jede Nutzerin besitzt ein eigenes Modell, das ausschliesslich auf ihren eigenen, binären Verhaltenssignalen trainiert wird. Wir begründen hier die drei zentralen Entscheidungen: (1) eine <strong>logistische Regression mit Bayes'schem Posterior</strong> statt kollaborativem Filtern oder Deep Learning, (2) eine <strong>Laplace-Approximation</strong> als analytische Inferenzmethode, die in einer einzigen Request laufen kann, und (3) <strong>Thompson Sampling</strong> als explorationsfreier Bandit für die Kartenauswahl. Wir zeigen, warum diese Kombination die Anforderungen – Kaltstart-Ehrlichkeit, Interpretierbarkeit, Unsicherheitsquantifizierung und Privatsphäre – bei minimaler Systemkomplexität erfüllt, und benennen die Grenzen dieser Wahl.</p>
+
+<h2>1. Problemstellung und Anforderungen</h2>
+<p>Das Empfehlungsproblem von SecondSwipe ist durch vier Eigenschaften geprägt:</p>
+<ol>
+<li><strong>Binäres Feedback.</strong> Jeder Wisch ist ein Label <code>y ∈ {0, 1}</code> (rechts = 1, links = 0).</li>
+<li><strong>Spärlicher Kaltstart.</strong> Die Nutzerin beginnt mit null Signalen; das Modell muss bereits nach wenigen Interaktionen funktionieren und dabei seine Unsicherheit ehrlich ausweisen.</li>
+<li><strong>Interpretierbarkeit.</strong> Die Nutzerin soll ihr gelerntes Profil <em>lesen</em> können. Eine Blackbox ist ausgeschlossen.</li>
+<li><strong>Privatsphäre durch Architektur.</strong> Ein Modell pro Nutzerin, keine Cross-User-Verknüpfung, keine Tracker. Das verbietet Verfahren, die von Natur aus nutzerübergreifende Daten benötigen.</li>
+</ol>
+<p>Aus diesen Anforderungen folgt die Architektur unmittelbar. Wir stellen sie in Abschnitt 7 dar.</p>
+
+<h2>2. Modellwahl: Warum logistische Regression?</h2>
+<p>Die Modellfamilie muss drei Bedingungen gleichzeitig erfüllen: <strong>interpretierbar</strong>, <strong>bei wenig Daten stabil</strong> und <strong>natürlich kalibriert</strong>.</p>
+
+<h3>2.1 Verworfen: Kollaboratives Filtern / Matrix-Faktorisierung</h3>
+<p>Matrix-Faktorisierung (<strong>Koren, Bell &amp; Volinsky, 2009</strong>) ist der Standard für Empfehlungssysteme, verletzt aber gleich zwei Anforderungen:</p>
+<ul>
+<li><strong>Cross-User-Daten sind konstitutiv.</strong> Die latente Nutzer- und Artikelmatrix entsteht aus den Interaktionen <em>aller</em> Nutzer. Das ist mit „ein Modell pro Nutzerin, keine Verknüpfung" unvereinbar.</li>
+<li><strong>Kaltstart.</strong> Neue Nutzerinnen haben keine Zeile in der Matrix; neue Artikel keine Spalte. Beides erfordert Zusatzheuristiken.</li>
+</ul>
+<p>Für SecondSwipe ist Kollaboratives Filtern daher strukturell ausgeschlossen – nicht aus Performance-Gründen, sondern weil es die Privatsphäre- und Kaltstart-Anforderungen verletzt.</p>
+
+<h3>2.2 Verworfen: Deep Learning</h3>
+<p>Neuronale Empfehler (<strong>vgl. Covington, Adams &amp; Sargin, 2016</strong> für YouTube) liefern hohe Vorhersagekraft, aber zu einem Preis, den SecondSwipe nicht zahlen will:</p>
+<ul>
+<li><strong>Datenhunger.</strong> Tiefe Modelle benötigen typischerweise Grössenordnungen mehr Interaktionen, als eine einzelne Nutzerin je produziert. Bei einem nutzer-lokalen Modell ist das unerreichbar.</li>
+<li><strong>Intransparenz.</strong> Latente Embeddings sind nicht „lesbar". Das Profil-Feature wäre unmöglich.</li>
+<li><strong>Schlechte Kalibrierung.</strong> <strong>Guo, Pleiss, Sun &amp; Weinberger (2017)</strong> dokumentierten, dass moderne tiefe Netze oft überkonfident sind – ihre Konfidenz stimmt nicht mit der empirischen Trefferquote überein. Für ein Produkt, dessen Versprechen <em>ehrliche</em> Unsicherheit ist, ist das disqualifizierend.</li>
+</ul>
+
+<h3>2.3 Gewählt: Logistische Regression mit Bayes'schem Posterior</h3>
+<p>Die logistische Regression (<strong>Bishop, 2006</strong>) erfüllt alle drei Bedingungen:</p>
+<ul>
+<li><strong>Interpretierbar.</strong> Jedes Gewicht entspricht einer lesbaren Präferenz („Holz &gt; Metall", „Mid-Century &gt; Bauhaus"). Die Gewichte <em>sind</em> das Profil.</li>
+<li><strong>Datenökonomisch.</strong> Ein lineares Modell mit regulierendem Prior lernt auch aus wenigen Dutzend Beobachtungen sinnvolle (wenn auch unsichere) Parameter.</li>
+<li><strong>Natürlich kalibriert.</strong> Die Sigmoid-Ausgabe ist per Konstruktion eine Wahrscheinlichkeit; mit einem Posterior über die Gewichte ergibt sich eine volle prädiktive Verteilung.</li>
+</ul>
+<p>Die Modellierung: Artikelmerkmale <code>x</code> (Kategorie, Ära, Material, Farbe, Preisband) werden mit Gewichten <code>w</code> linear kombiniert und durch die Sigmoid-Funktion in eine Like-Wahrscheinlichkeit überführt:</p>
+<pre><code>p(like = 1 | x, w) = σ(w·x) = 1 / (1 + exp(-w·x))</code></pre>
+<p>Der entscheidende Schritt ist, <code>w</code> nicht als Punktschätzung zu behandeln, sondern als <strong>Zufallsvariable mit Posterior-Verteilung</strong>. Das liefert Unsicherheit, Regularisierung und Exploration aus einer einzigen Konstruktion.</p>
+
+<h2>3. Bayesianische Inferenz: Warum ein Posterior, warum Laplace?</h2>
+
+<h3>3.1 Warum Bayes'sch statt Maximum-Likelihood?</h3>
+<p>Eine reine Maximum-Likelihood-Schätzung (MLE) liefert einen Punktwert, aber keine Aussage über Unsicherheit – und sie ist bei spärlichen Daten instabil (Überanpassung an wenige Wischer). Ein Bayes'scher Ansatz (<strong>Gelman et al., 2013</strong>) stellt einen Prior über <code>w</code> auf und kombiniert ihn mit den Daten zum Posterior:</p>
+<pre><code>Posterior(w | D) ∝ Likelihood(D | w) · Prior(w)</code></pre>
+<p>Der Prior wirkt als <strong>Regularisierer</strong>: Bei null oder wenigen Wischern dominiert er und hält die Schätzung konservativ. Das ist exakt das Verhalten, das ein ehrlicher Kaltstart braucht.</p>
+
+<h3>3.2 Warum die Laplace-Approximation?</h3>
+<p>Vollständige Bayes'sche Inferenz über MCMC (Markov-Chain-Monte-Carlo) ist für ein Modell, das <em>bei jeder Empfehlungs-Request</em> neu trainiert wird, zu langsam. Die Laplace-Approximation (<strong>MacKay, 1992; Bishop, 2006</strong>) bietet den entscheidenden Kompromiss: Sie approximiert den Posterior durch eine multivariate Normalverteilung um das Posterior-Maximum <code>w_MAP</code>:</p>
+<pre><code>Posterior(w | D) ≈ N( w_MAP, H⁻¹ )</code></pre>
+<p>Dabei ist <code>H</code> die negative Hesse-Matrix der log-Posterior-Dichte an der Stelle <code>w_MAP</code>. Ein Newton-Schritt liefert zugleich Punktwert und Kovarianzmatrix – und damit pro Vorhersage ein Unsicherheitsmass. Bei logistischer Regression (log-konkaver log-Posterior) ist die Gauss-Approximation nahe dem Modus eine gute Näherung.</p>
+<p>Die Wahl ist also pragmatisch und begründet: <strong>MCMC wäre genauer, aber für Echtzeit-Inferenz zu teuer; Laplace liefert Unsicherheit in Millisekunden und ist für die Dimensionen eines nutzer-lokalen Modells ausreichend.</strong></p>
+
+<h2>4. Exploration: Warum Thompson Sampling?</h2>
+<p>Ein Empfehler, der immer nur den erwarteten Bestwert zeigt, erkundet nie und verharrt in einer Filterblase. Die klassische Lösung ist Exploration. Wir wählen <strong>Thompson Sampling</strong> (<strong>Thompson, 1933</strong>) – posterior-samples der Gewichte:</p>
+<pre><code>for candidate in catalog:
+    w̃ ~ N(w_MAP, H⁻¹)          # eine Stichprobe aus dem Posterior
+    score = σ(w̃ · x)            # Bewertung mit dem gezogenen Gewicht
+choose argmax(score)</code></pre>
+<p>Die Begründung liegt in der Literatur:</p>
+<ul>
+<li><strong>Chapelle &amp; Li (2011)</strong> zeigten empirisch, dass Thompson Sampling im Bandit-Setting klassische Verfahren (ε-greedy, UCB) oft übertrifft und deutlich robuster als ε-greedy ist, weil es keine manuell zu wählende Explorationsrate braucht.</li>
+<li><strong>Russo et al. (2018)</strong> geben in ihrem Tutorial die theoretische Fundierung: Thompson Sampling ist „probability matching" – es zieht jede Aktion mit der Wahrscheinlichkeit, dass sie optimal ist. Exploration entsteht automatisch aus der Posterior-Unsicherheit.</li>
+<li><strong>Kaltstart-kompatibel.</strong> Bei breitem Posterior (wenig Daten) sind die Stichproben stark gestreut → viel Exploration. Mit wachsender Datenlage schrumpft der Posterior → das Sampling konvergiert gegen reine Exploitation. Es gibt keinen einzigen handzutunenden Parameter.</li>
+</ul>
+<p>Damit ist Thompson Sampling die natürliche Wahl: <strong>Es nutzt genau die Posterior-Verteilung, die wir ohnehin berechnen, und regelt Exploration/Exploitation ohne Stellschrauben.</strong></p>
+
+<h2>5. Unsicherheit und Kalibrierung</h2>
+<p>Die Unsicherheit einer Vorhersage folgt aus der Kovarianzmatrix über die lineare Propagierung:</p>
+<pre><code>var(p) = (∂p/∂w)ᵀ · H⁻¹ · (∂p/∂w)
+ci₉₅  = p ± 1.96 · √var(p)</code></pre>
+<p>Wichtig ist die <strong>ehrliche Interpretation</strong>: Bei wenigen Wischern ist dieses Intervall breit (nahe <code>[0.3, 0.9]</code>), nicht künstlich eng. Kalibrierung wird gemessen, nicht behauptet:</p>
+<ul>
+<li><strong>Brier-Score</strong> (<strong>Brier, 1950</strong>) als Gesamtmass der probabilistischen Güte.</li>
+<li><strong>Kalibrierungskurven</strong> (reliability diagrams) nach <strong>Niculescu-Mizil &amp; Caruana (2005)</strong>, um zu prüfen, ob „78 %" auch empirisch 78 % Treffer bedeutet.</li>
+<li><strong>AUC / ROC</strong> als diskriminatives Mass (trennt das Modell Likes von Nicht-Likes?).</li>
+</ul>
+<p>Diese Metriken erscheinen im Analyse-Tab als Teil des transparenten Profils.</p>
+
+<h2>6. Verweildauer als weiches Signal</h2>
+<p>Neben dem binären Label erfasst SecondSwipe die <strong>Betrachtungsdauer</strong> einer Karte (zwischen Anzeige und Wisch). Sie ist ein Indikator für Ambivalenz: langes Zögern vor einem „Ja" deutet auf relevante Unsicherheit. Die Dauer wird als <strong>weiche Gewichtung</strong> in den Posterior eingebracht, nicht als hartes Label:</p>
+<pre><code>score = σ(w·x) · (1 + λ · similarity(dwellCard, candidate))</code></pre>
+<p><code>λ</code> ist klein und gedeckelt. Die Begründung für die Zurückhaltung ist empirisch: Verweildauer ist ein <strong>lautes Signal</strong> (Ablenkung, Ladezeiten, unentschlossenes Betrachten ohne Kaufabsicht). Die Literatur zum impliziten Feedback (<strong>Hu, Koren &amp; Volinsky, 2008</strong>) mahnt genau diese Vorsicht an – implizite Signale sind dicht, aber verrauscht und dürfen das harte Label nicht übersteuern.</p>
+
+<h2>7. Systemarchitektur und die Wahl des Weges</h2>
+<pre><code>Browser (React/Vite)
+    │  HTTP
+    ▼
+Express (Node.js, TypeScript)
+    ├─ /api/recommend  → Modell laden, Laplace, Thompson-Sample, Top-K
+    ├─ /api/swipe      → Wisch speichern, Posterior aktualisieren
+    ├─ /api/profile    → Gewichte, Kalibrierung, Reset
+    └─ SQLite (ein Modell + Wischer pro Nutzerin)</code></pre>
+<p>Die Architekturentscheidungen folgen demselben Prinzip wie die Modellwahl: <strong>minimale Komplexität bei erfüllten Anforderungen.</strong></p>
+<ul>
+<li><strong>Ein Prozess, eine Maschine.</strong> Bei Pilot-Grösse ist das Modell pro Request aus den SQLite-Zeilen der Nutzerin aufgebaut und in Millisekunden gefittet. Kein separater Inferenzdienst, keine Serialisierung des Modells über Prozessgrenzen.</li>
+<li><strong>TypeScript für das ML.</strong> Das Modell ist reine Mathematik (Sigmoid, Newton-Schritt, Hesse-Matrix, Matrixinversion). Eine zweite Sprache (Python) und ein zweiter Dienst würden Laufzeit und Deployment-Komplexität erhöhen, ohne dass ein Pilot sie braucht.</li>
+<li><strong>SQLite statt Postgres.</strong> Ein Einzelprozess mit einer Schreiberin pro Nutzerin – SQLite deckt das vollständig ab und entfällt als Betriebskomponente. Der Pfad zu Postgres ist für die Skalierung vorgezeichnet.</li>
+<li><strong>Keine GPU.</strong> Der Rechenaufwand ist lächerlich gering; die bewusste Abwesenheit einer Deep-Learning-Pipeline ist ein Feature, kein Mangel.</li>
+</ul>
+<p>Diese Route ist ein <strong>Pilot-Kompromiss</strong>, kein Skalierungsversprechen. Abschnitt 9 benennt die Übergänge.</p>
+
+<h2>8. Evaluierungsmethodik</h2>
+<p>Ein wissenschaftlich belastbarer Empfehler wird an drei Achsen gemessen:</p>
+<ol>
+<li><strong>Diskrimination (AUC).</strong> Trennt das Modell gelikte von nicht-gelikten Artikeln?</li>
+<li><strong>Kalibrierung (Brier, Reliability Diagram).</strong> Stimmen die ausgegebenen Wahrscheinlichkeiten mit den beobachteten Frequenzen überein?</li>
+<li><strong>Online-Regret.</strong> Im Vergleich zu einer Zufalls-Baseline: Wie viele zusätzliche Likes erzeugt das Thompson-Sampling-Modell pro Sitzung? Regret ist das Mass für die Exploration/Exploitation-Güte.</li>
+</ol>
+<p>Die ehrliche Kaltstart-Erkenntnis bleibt dabei sichtbar: <strong>Mit sehr wenigen Wischern ist die Punktvorhersage nahezu zufällig, und das Produkt sagt das auch.</strong></p>
+
+<h2>9. Grenzen und nächste Schritte</h2>
+<ul>
+<li><strong>Laplace ist eine Gauss-Näherung.</strong> Sie ist bei logistischer Regression gut, aber nicht exakt. Für höhere Ansprüche ist variational inference (VI) oder MCMC der nächste Schritt – beides gegen Echtzeit-Budget abzuwägen.</li>
+<li><strong>Kaltstart ohne Cross-User-Wissen.</strong> Der bewusste Verzicht auf kollaboratives Filtern begrenzt die Empfehlungsgüte in den ersten Sitzungen. Ein datenschutzkonformer Mittelweg (z. B. föderiertes Lernen oder vorab trainierte, nutzerunabhängige Merkmals-Priors) ist die naheliegende Erweiterung, ohne das „0 Tracker"-Versprechen zu brechen.</li>
+<li><strong>Skalierung.</strong> Laplace + SQLite sind für Tausende, nicht Millionen Nutzer gedacht. Der definierte Pfad: Postgres für die Persistenz, ein separater Inferenzdienst für den Durchsatz, ggf. VI für strengere Posterior-Approximation.</li>
+<li><strong>Verweildauer.</strong> Aktuell eine gedeckelte weiche Gewichtung. Eine systematische Evaluation ihres Vorhersagewerts ist offen.</li>
+</ul>
+
+<div class="refs">
+<h2>Referenzen</h2>
+<ul>
+<li>Bishop, C. M. (2006). <em>Pattern Recognition and Machine Learning</em>. Springer.</li>
+<li>Brier, G. W. (1950). Verification of forecasts expressed in terms of probability. <em>Monthly Weather Review, 78</em>(1), 1–3.</li>
+<li>Chapelle, O., &amp; Li, L. (2011). An empirical evaluation of Thompson sampling. <em>Advances in Neural Information Processing Systems (NeurIPS), 24</em>.</li>
+<li>Covington, P., Adams, J., &amp; Sargin, E. (2016). Deep neural networks for YouTube recommendations. <em>Proceedings of the 10th ACM Conference on Recommender Systems (RecSys)</em>.</li>
+<li>Gelman, A., Carlin, J. B., Stern, H. S., Dunson, D. B., Vehtari, A., &amp; Rubin, D. B. (2013). <em>Bayesian Data Analysis</em> (3rd ed.). CRC Press.</li>
+<li>Guo, C., Pleiss, G., Sun, Y., &amp; Weinberger, K. Q. (2017). On calibration of modern neural networks. <em>Proceedings of the 34th International Conference on Machine Learning (ICML)</em>.</li>
+<li>Hu, Y., Koren, Y., &amp; Volinsky, C. (2008). Collaborative filtering for implicit feedback datasets. <em>Proceedings of the IEEE International Conference on Data Mining (ICDM)</em>.</li>
+<li>Koren, Y., Bell, R., &amp; Volinsky, C. (2009). Matrix factorization techniques for recommender systems. <em>Computer, 42</em>(8), 30–37.</li>
+<li>MacKay, D. J. C. (1992). Bayesian interpolation. <em>Neural Computation, 4</em>(3), 415–447.</li>
+<li>Niculescu-Mizil, A., &amp; Caruana, R. (2005). Predicting good probabilities with supervised learning. <em>Proceedings of the 22nd International Conference on Machine Learning (ICML)</em>.</li>
+<li>Russo, D., Van Roy, B., Kazerouni, A., Osband, I., &amp; Wen, Z. (2018). A tutorial on Thompson sampling. <em>Foundations and Trends in Machine Learning, 11</em>(1), 1–96.</li>
+<li>Thompson, W. R. (1933). On the likelihood that one unknown probability exceeds another in view of the evidence of two samples. <em>Biometrika, 25</em>(3–4), 285–294.</li>
+</ul>
+</div>
+
+<footer>
+<p><a href="../index.html">← Zurück zur Pitch-Seite</a> · <a href="business-case.html">Geschäftsfall-Papier →</a></p>
+<p>SecondSwipe · Öffentliches Arbeitspapier</p>
+</footer>
+
+</body>
+</html>
